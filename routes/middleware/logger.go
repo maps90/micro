@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"github.com/Sirupsen/logrus"
-	"github.com/labstack/echo"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/labstack/echo"
 )
 
 func Logger() echo.MiddlewareFunc {

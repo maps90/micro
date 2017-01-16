@@ -1,11 +1,12 @@
 package loket
 
 import (
+	"fmt"
+	"testing"
+
 	app "github.com/mataharimall/micro-api"
 	. "github.com/mataharimall/micro-api/commons/idata/assertion"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"fmt"
 )
 
 func init() {
@@ -14,7 +15,7 @@ func init() {
 
 type Events struct {
 	Status string `json:"status"`
-	Data []*struct {
+	Data   []*struct {
 		IdEvent string `json:"id_event"`
 	} `json:"data"`
 }
@@ -31,11 +32,13 @@ func TestGetAuth(t *testing.T) {
 }
 
 func TestGetEvents(t *testing.T) {
-	Convey("should retun event list",t, func() {
+	Convey("should retun event list", t, func() {
 		l := New().GetAuth()
 		e := new(Events)
-		evt := l.Post("v3", "event",  fmt.Sprintf(`{"token": "%s"}`, l.Token))
+		evt := l.Post("v3", "event", fmt.Sprintf(`{"token": "%s"}`, l.Token))
 		evt.SetStruct(e)
+
+		fmt.Printf("%#v", e)
 		So(e.Status, ShouldEqual, "success")
 	})
 }

@@ -3,9 +3,10 @@ package loket
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	gr "github.com/parnurzeal/gorequest"
 	c "github.com/spf13/viper"
-	"net/http"
 )
 
 type Loket struct {
@@ -19,7 +20,7 @@ type Loket struct {
 	TokenExpired bool
 }
 
-var LOKET_URI = c.GetString("loket.url")
+var LOKET_URI = ""
 
 func (l *Loket) GetAuth() *Loket {
 	if l.TokenExpired {
@@ -35,6 +36,7 @@ func (l *Loket) GetAuth() *Loket {
 }
 
 func New() *Loket {
+	setBaseUrl(c.GetString("loket.url"))
 	l := &Loket{
 		UserName: c.GetString("loket.username"),
 		Password: c.GetString("loket.password"),
@@ -42,6 +44,10 @@ func New() *Loket {
 		Token:    "",
 	}
 	return l
+}
+
+func setBaseUrl(c string) {
+	LOKET_URI = c
 }
 
 func SetUrl(version, url string) string {
