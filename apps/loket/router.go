@@ -2,9 +2,9 @@ package loket
 
 import (
 	"github.com/labstack/echo"
-	em "github.com/labstack/echo/middleware"
 	"github.com/mataharimall/micro"
-	ctrl "github.com/mataharimall/micro-api/apps/loket/controllers"
+	ctrl "github.com/mataharimall/micro/apps/loket/controllers"
+	mm "github.com/mataharimall/micro/middleware"
 )
 
 type LoketRoute struct{}
@@ -14,8 +14,8 @@ func init() {
 }
 
 func (l *LoketRoute) SetRoute(e *echo.Echo) *echo.Echo {
-	e.Use(em.Logger())
-	e.Post("/loket/event", ctrl.GetEventList)
+	e.Use(mm.Logger())
+	e.Post("/loket/event/list", ctrl.GetEventList)
 	e.Post("/loket/schedule/:scheduleID", ctrl.GetSchedule)
 	e.Post("/loket/tickets/:scheduleID", ctrl.GetTicketsBySchedule)
 	return e

@@ -15,29 +15,21 @@ type TicketService struct {
 }
 
 type Tickets struct {
-    Status  string     `json:"status" jsmap:"status"`
-    Data    TicketData `json:"data" jsmap:"data"`
-    Message string     `json:"message" jsmap:"message"`
-    Code    int        `json:"code" jsmap:"code"`
+    Status  string            `json:"status" jsmap:"status"`
+    Data    entity.TicketData `json:"data" jsmap:"data"`
+    Message string            `json:"message" jsmap:"message"`
+    Code    int               `json:"code" jsmap:"code"`
 }
 
 func (self *TicketService) GetTicketsBySchedule(ScheduleID string) (err error) {
 
-    api := loket.New()
-    api.GetAuth()
-    token := fmt.Sprintf(`{"token": "%s"}`, api.Token)
+    ev := new(Tickets)
 
-    endpoint := fmt.Sprintf("tickets/%s", ScheduleID)
-    api.Post("v3", endpoint, token)
-
-    ev := new(entity.Tickets)
-
-    api.SetStruct(ev)
-
-    fmt.Println(ev)
+    loket.New().GetAuth().
+        Post(fmt.Sprintf("/v3/tickets/%s", ScheduleID), "form", "").
+        SetStruct(ev)
 
     x, err := helper.JsMap(ev)
-    fmt.Println(x)
 
     self.Response.Result = x
 

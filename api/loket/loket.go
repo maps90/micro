@@ -53,6 +53,15 @@ func New() *Loket {
 	return l
 }
 
+func GetResources() map[string]string {
+	r := map[string]string{
+		"get_event_list":         SetUrl("v3/event"),
+		"get_ticket_groups":      SetUrl("v3/schedule/:scheduleID"),
+		"get_ticket_by_schedule": SetUrl("v3/tickets/:scheduleID"),
+	}
+	return r
+}
+
 func SetUrl(url string) string {
 	t := fmt.Sprintf("%s%s", getConfig("url"), url)
 	return t
@@ -88,6 +97,7 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 func (l *Loket) Post(url, t, body string) *Loket {
 	l.Response, l.Body, l.Errors = gr.New().
 		Post(SetUrl(url)).
+		Set("token", l.Token).
 		Type(t).
 		Send(body).
 		End()
@@ -97,6 +107,7 @@ func (l *Loket) Post(url, t, body string) *Loket {
 func (l *Loket) Get(url string) *Loket {
 	l.Response, l.Body, l.Errors = gr.New().
 		Get(SetUrl(url)).
+		Set("token", l.Token).
 		End()
 	return l
 }

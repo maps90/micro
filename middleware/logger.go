@@ -29,6 +29,7 @@ func Logger() echo.MiddlewareFunc {
 			entry := l.WithFields(logrus.Fields{
 				"url":     req.URI(),
 				"method":  req.Method(),
+				"header":  req.Header(),
 				"remote":  remoteAddr,
 				"request": req.Body(),
 			})
