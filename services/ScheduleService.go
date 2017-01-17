@@ -8,20 +8,23 @@ import (
     entity "github.com/mataharimall/micro-api/entities"
 )
 
-type EventService struct {
+type ScheduleService struct {
     Response struct {
         Result interface{}
     }
 }
 
-func (self *EventService) List() (err error) {
+func (self *ScheduleService) GetSchedule(ScheduleID string) (err error) {
 
     api := loket.New()
     api.GetAuth()
     token := fmt.Sprintf(`{"token": "%s"}`, api.Token)
-    api.Post("v3", "event", token)
 
-    ev := new(entity.Events)
+    endpoint := fmt.Sprintf("schedule/%s", ScheduleID)
+
+    api.Post("v3", endpoint, token)
+
+    ev := new(entity.Schedules)
     api.SetStruct(ev)
 
     x, err := helper.JsMap(ev)

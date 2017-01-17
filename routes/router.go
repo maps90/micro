@@ -26,5 +26,11 @@ func SetRoute() *echo.Echo {
 	//event.use(auth)
 	event.Post("/list", controller.GetEventList)
 
+	schedule := e.Group("/schedule")
+	schedule.Post("/:scheduleID", controller.GetSchedule)
+
+	ticket := e.Group("/tickets")
+	ticket.Post("/:scheduleID", controller.GetTicketsBySchedule)
+
 	return e
 }
