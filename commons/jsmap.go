@@ -25,7 +25,6 @@ func JsMap(in interface{}) (map[string]interface{}, error) {
         valueField := v.Field(i)
 
         tagv := fi.Tag.Get("jsmap")
-        //tagv = strings.ToLower(fi.Name)
 
         if tagv != "" {
             // set key of map to value in struct field
@@ -42,9 +41,6 @@ func JsMap(in interface{}) (map[string]interface{}, error) {
                     }
                     xx = append(xx, x)
                 }
-
-                fmt.Println(xx)
-
                 out[tagv] = xx
             } else if valueField.Kind() == reflect.Struct {
                 x, err := JsMap(valueField.Interface())
