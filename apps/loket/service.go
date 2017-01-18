@@ -20,5 +20,6 @@ func (l *LoketRoute) SetRoute(s *echo.Echo) *echo.Echo {
 	s.SetHTTPErrorHandler(middleware.AppHttpErrorHandler)
 
 	s.Get("/loket/event", handlers.GetEventList)
+	s.POST("/loket/invoice/paid/:code", handlers.PaidInvoice)
 	return s
 }
