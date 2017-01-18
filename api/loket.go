@@ -42,15 +42,18 @@ func (l *Loket) GetAuth() *Loket {
 	return l
 }
 
-func NewLoketApi(configName string) *Loket {
+func NewLoketApi(configName string) (*Loket, error) {
 	conf = c.GetStringMapString(configName)
+	if conf == nil {
+		return nil, fmt.Errorf("missing config")
+	}
 	l := &Loket{
 		UserName: getConfig("username"),
 		Password: getConfig("password"),
 		ApiKey:   getConfig("key"),
 		Token:    "",
 	}
-	return l
+	return l, nil
 }
 
 func GetResources() map[string]string {

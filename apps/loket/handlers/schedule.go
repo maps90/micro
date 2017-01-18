@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "encoding/json"
     "fmt"
     "net/http"
 
@@ -18,14 +19,21 @@ type schedule struct {
 
 func GetSchedule(c echo.Context) (err error) {
 
-    r := &schedule{}
+    // r := &schedule{}
 
-    if err := c.Bind(r.Request); err != nil {
-        return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+    // if err := c.Bind(r.Request); err != nil {
+    //     return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+    // }
+
+    loket, ok := container.Get("api.loket").(*api.Loket)
+    if !ok {
+        return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
     }
 
-    loket := container.Get("api.loket").(*api.Loket)
     loket.GetAuth().Post(fmt.Sprintf("/v3/schedule/%s", c.Param("scheduleID")), "form", "")
 
-    return c.JSON(http.StatusOK, loket.Body)
+    var out interface{}
+    json.Unmarshal([]byte(loket.Body), &out)
+
+    return c.JSON(http.StatusOK, out)
 }
