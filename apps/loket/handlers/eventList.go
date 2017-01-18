@@ -7,11 +7,12 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mataharimall/micro/api"
 	"github.com/mataharimall/micro/container"
+	"github.com/mataharimall/micro/helpers"
 )
 
-type eventsList struct {
+type EventsList struct {
 	Request  interface{}
-	Response struct{}
+	Response interface{}
 }
 
 func GetEventList(c echo.Context) error {
@@ -23,8 +24,9 @@ func GetEventList(c echo.Context) error {
 
 	loket.GetAuth().Post("/v3/event", "form", "")
 
-	var out interface{}
-	json.Unmarshal([]byte(loket.Body), &out)
-	return c.JSON(http.StatusOK, out)
+	var m map[string]interface{}
+	json.Unmarshal([]byte(loket.Body), &m)
+
+	return helpers.BuildJSON(c, m)
 
 }

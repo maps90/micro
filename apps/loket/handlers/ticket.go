@@ -19,12 +19,6 @@ type ticket struct {
 
 func GetTicketsBySchedule(c echo.Context) (err error) {
 
-    // r := &ticket{}
-
-    // if err := c.Bind(r.Request); err != nil {
-    //     return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-    // }
-
     loket, ok := container.Get("api.loket").(*api.Loket)
     if !ok {
         return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
@@ -32,9 +26,9 @@ func GetTicketsBySchedule(c echo.Context) (err error) {
 
     loket.GetAuth().Post(fmt.Sprintf("/v3/tickets/%s", c.Param("scheduleID")), "form", "")
 
-    var out interface{}
-    json.Unmarshal([]byte(loket.Body), &out)
+    var m map[string]interface{}
+    json.Unmarshal([]byte(loket.Body), &m)
 
-    return c.JSON(http.StatusOK, out)
+    return helpers.BuildJSON(c, m)
 
 }
