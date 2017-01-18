@@ -1,4 +1,4 @@
-package loket
+package api
 
 import (
 	"encoding/json"
@@ -42,8 +42,8 @@ func (l *Loket) GetAuth() *Loket {
 	return l
 }
 
-func New() *Loket {
-	conf = c.GetStringMapString("loket")
+func NewLoketApi(configName string) *Loket {
+	conf = c.GetStringMapString(configName)
 	l := &Loket{
 		UserName: getConfig("username"),
 		Password: getConfig("password"),

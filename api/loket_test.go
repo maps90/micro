@@ -1,19 +1,13 @@
-package loket
+package api
 
 import (
 	"fmt"
 
-	. "github.com/mataharimall/micro-api/helpers/idata/assertion"
+	. "github.com/mataharimall/micro/helpers/idata/assertion"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"testing"
-
-	"github.com/mataharimall/micro-api/config"
 )
-
-func init() {
-	config.Init()
-}
 
 type Events struct {
 	Status string `json:"status"`
@@ -25,7 +19,7 @@ type Events struct {
 func TestGetAuth(t *testing.T) {
 	Convey("Testing Loket API", t, func() {
 		Convey("should return token", func() {
-			l := New().GetAuth()
+			l := New("loket").GetAuth()
 			byt := []byte(l.Body)
 			So(byt, ShouldBeJSONAndHave, "status", "success")
 			So(byt, ShouldBeJSONAndHave, "code", "200")
@@ -35,7 +29,7 @@ func TestGetAuth(t *testing.T) {
 
 func TestGetEvents(t *testing.T) {
 	Convey("should retun event list", t, func() {
-		l := New().GetAuth()
+		l := New("loket").GetAuth()
 		e := new(Events)
 		evt := l.Post("/v3/event", "form", fmt.Sprintf(`{"token": "%s"}`, l.Token))
 		evt.SetStruct(e)
