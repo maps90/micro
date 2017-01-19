@@ -1,9 +1,8 @@
 package app
 
 import (
-	"github.com/facebookgo/grace/gracehttp"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/engine/standard"
+	"github.com/labstack/echo/engine/fasthttp"
 	"github.com/mataharimall/micro/handler"
 	"github.com/mataharimall/micro/middleware"
 	c "github.com/spf13/viper"
@@ -25,9 +24,6 @@ func initRouter() error {
 	e.Post("/invoice/create", handler.CreateInvoice)
 	e.Post("/invoice/list/:invoice_code/attendee", handler.FetchInvoiceListAttendee)
 
-	std := standard.New(":" + c.GetString("app.port"))
-	std.SetHandler(e)
-
-	err := gracehttp.Serve(std.Server)
+	err := e.Run(fasthttp.New(":" + c.GetString("app.port")))
 	return err
 }
