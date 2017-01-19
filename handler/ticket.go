@@ -13,12 +13,12 @@ import (
 
 func GetTicketsBySchedule(c echo.Context) (err error) {
 
-    loket, ok := librarian.Get("api.loket").(*api.Loket)
+    loket, ok := librarian.Get("loket").(*api.Loket)
     if !ok {
         return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
     }
 
-    url := fmt.Sprintf("/v3/tickets/%s", c.Param("schedule_id"))
+    url := fmt.Sprintf(`/v3/tickets/%s`, c.Param("schedule_id"))
     loket.GetAuth().Post(url, "form", "")
 
     var m map[string]interface{}

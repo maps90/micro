@@ -37,3 +37,4 @@ _testmain.go
 *.prof
 micro-api
 build/micro
+app.yaml

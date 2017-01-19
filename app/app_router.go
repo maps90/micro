@@ -18,6 +18,7 @@ func initRouter() error {
 	e.SetHTTPErrorHandler(middleware.AppHttpErrorHandler)
 
 	e.Get("/loket/event", handler.GetEventList)
+	e.Get("/loket/event/search", handler.SearchEvent)
 	e.Get("/loket/schedule/:schedule_id", handler.GetScheduleById)
 	e.Get("/loket/tickets/:schedule_id", handler.GetTicketsBySchedule)
 	e.Post("/loket/invoice/paid/:code", handler.PostInvoiceStatus)
