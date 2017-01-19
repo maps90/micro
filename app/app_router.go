@@ -22,6 +22,8 @@ func initRouter() error {
 	e.Get("/loket/schedule/:schedule_id", handler.GetScheduleById)
 	e.Get("/loket/tickets/:schedule_id", handler.GetTicketsBySchedule)
 	e.Post("/loket/invoice/paid/:code", handler.PostInvoiceStatus)
+	e.Post("/loket/invoice/create", handler.CreateInvoice)
+	e.Post("/loket/invoice/list/:invoice_code/attendee", handler.FetchInvoiceListAttendee)
 
 	std := standard.New(":" + c.GetString("app.port"))
 	std.SetHandler(e)

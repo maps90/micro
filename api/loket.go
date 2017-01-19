@@ -97,7 +97,8 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 	return l
 }
 
-func (l *Loket) Post(url, t string, body string) *Loket {
+
+func (l *Loket) Post(url, t, body string) *Loket {
 	l.Response, l.Body, l.Errors = gr.New().
 		Post(SetUrl(url)).
 		Set("token", l.Token).
