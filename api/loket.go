@@ -109,6 +109,7 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 func (l *Loket) Get(url string) *Loket {
 	l.Response, l.Body, l.Errors = gr.New().
+		Set("token", l.Token).
 		Get(SetUrl(url)).
 		Set("token", l.Token).
 		End()
