@@ -1,12 +1,12 @@
 package app
 
 import (
+	"github.com/facebookgo/grace/gracehttp"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/engine/standard"
 	"github.com/mataharimall/micro/handler"
 	"github.com/mataharimall/micro/middleware"
-	"github.com/labstack/echo/engine/standard"
 	c "github.com/spf13/viper"
-	"github.com/facebookgo/grace/gracehttp"
 )
 
 func initRouter() error {
@@ -18,7 +18,9 @@ func initRouter() error {
 	e.SetHTTPErrorHandler(middleware.AppHttpErrorHandler)
 
 	e.Get("/loket/event", handler.GetEventList)
-	e.Get("/loket/schedule/:schedule_id", handler.GetEventSchedule)
+	e.Get("/loket/event/search", handler.SearchEvent)
+	e.Get("/loket/schedule/:schedule_id", handler.GetScheduleById)
+	e.Get("/loket/tickets/:schedule_id", handler.GetTicketsBySchedule)
 	e.Post("/loket/invoice/paid/:code", handler.PostInvoiceStatus)
 	e.Post("/loket/invoice/create", handler.CreateInvoice)
 	e.Post("/loket/invoice/list/:invoice_code/attendee", handler.FetchInvoiceListAttendee)

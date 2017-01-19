@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"github.com/Sirupsen/logrus"
-	"github.com/labstack/echo"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/labstack/echo"
 )
 
 func Logger() echo.MiddlewareFunc {
@@ -28,6 +29,7 @@ func Logger() echo.MiddlewareFunc {
 			entry := l.WithFields(logrus.Fields{
 				"url":     req.URI(),
 				"method":  req.Method(),
+				"header":  req.Header(),
 				"remote":  remoteAddr,
 				"request": req.Body(),
 			})

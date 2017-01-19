@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+
 	. "github.com/mataharimall/micro/helper/idata/assertion"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -34,6 +35,8 @@ func TestGetEvents(t *testing.T) {
 		e := new(Events)
 		evt := l.Post("/v3/event", "form", fmt.Sprintf(`{"token": "%s"}`, l.Token))
 		evt.SetStruct(e)
+
+		fmt.Printf("%#v", e)
 		So(e.Status, ShouldEqual, "success")
 	})
 }

@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	gr "github.com/parnurzeal/gorequest"
 	c "github.com/spf13/viper"
-	"net/http"
 )
 
 var conf map[string]string
@@ -55,6 +56,15 @@ func NewLoketApi(configName string) (*Loket, error) {
 	return l, nil
 }
 
+func GetResources() map[string]string {
+	r := map[string]string{
+		"get_event_list":         SetUrl("v3/event"),
+		"get_ticket_groups":      SetUrl("v3/schedule/:scheduleID"),
+		"get_ticket_by_schedule": SetUrl("v3/tickets/:scheduleID"),
+	}
+	return r
+}
+
 func SetUrl(url string) string {
 	t := fmt.Sprintf("%s%s", getConfig("url"), url)
 	return t
@@ -87,8 +97,8 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 	return l
 }
 
+
 func (l *Loket) Post(url, t, body string) *Loket {
-	fmt.Println("The Tokent:", l.Token)
 	l.Response, l.Body, l.Errors = gr.New().
 		Post(SetUrl(url)).
 		Set("token", l.Token).
@@ -102,6 +112,7 @@ func (l *Loket) Get(url string) *Loket {
 	l.Response, l.Body, l.Errors = gr.New().
 		Set("token", l.Token).
 		Get(SetUrl(url)).
+		Set("token", l.Token).
 		End()
 	return l
 }
