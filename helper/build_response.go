@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-func BuildJSON(c echo.Context, rs interface{}) (err error) {
+func BuildJSON(c echo.Context, rs interface{}, err error) (error) {
 	reqId := RandomString(20)
 	rsLen := rs == nil
 	val := reflect.ValueOf(rs)

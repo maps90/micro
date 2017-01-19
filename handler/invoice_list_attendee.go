@@ -1,17 +1,14 @@
 package handler
 
 import (
-	"github.com/labstack/echo"
-	"github.com/mataharimall/micro/api"
-	"net/http"
 	"fmt"
-	"encoding/json"
-	"github.com/Sirupsen/logrus"
+	"net/http"
+
+	"github.com/labstack/echo"
 	"github.com/maps90/librarian"
+	"github.com/mataharimall/micro/api"
 	"github.com/mataharimall/micro/helper"
 )
-
-var logger = logrus.New()
 
 type InvoiceListAttendee struct {
 	Request ListResponse
@@ -30,15 +27,5 @@ func FetchInvoiceListAttendee(c echo.Context) error {
 	url := fmt.Sprintf("/v1/invoice/%s/attendee", c.Param("invoice_code"))
 
 	loket.GetAuth().Post(url, "form", "")
-	var m map[string]interface{}
-	err := json.Unmarshal([]byte(loket.Body), &m)
-
-	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"Endpoint": "FetchInvoiceListAttendee",
-		}).Debug("Error:", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to decode server response")
-	}
-
-	return helper.BuildJSON(c, m)
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

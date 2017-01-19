@@ -1,17 +1,17 @@
-package handlers
+package handler
 
 import (
-	"github.com/labstack/echo"
-	"net/http"
-	"github.com/mataharimall/micro/container"
-	"github.com/mataharimall/micro/api"
 	"encoding/json"
-	"fmt"
-	"github.com/mataharimall/micro/helpers"
+	"net/http"
+
+	"github.com/labstack/echo"
+	"github.com/maps90/librarian"
+	"github.com/mataharimall/micro/api"
+	"github.com/mataharimall/micro/helper"
 )
 
 type CreateInvoiceRequestResponse struct {
-	Request CreateInvoiceRequest
+	Request  CreateInvoiceRequest
 	Response interface{}
 }
 
@@ -49,28 +49,17 @@ func CreateInvoice(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	loket, ok := container.Get("api.loket").(*api.Loket)
-
-	fmt.Printf("Type %T\n", loket)
-	fmt.Printf("Value %v\n", loket)
+	loket, ok := librarian.Get("loket").(*api.Loket)
 	if !ok {
-		fmt.Println("Internal server error")
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	fmt.Printf("Request %v\n", r.Request)
-
 	jbyte, err := json.Marshal(r.Request)
-	str := string(jbyte)
-	fmt.Println("String", str)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	loket.GetAuth().Post("/v3/invoice/create", "json", str)
-	var m map[string]interface{}
-	json.Unmarshal([]byte(loket.Body), &m)
-
-	return helpers.BuildJSON(c, m)
+	loket.GetAuth().Post("/v3/invoice/create", "json", string(jbyte))
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

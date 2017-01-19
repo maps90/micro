@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	gr "github.com/parnurzeal/gorequest"
 	c "github.com/spf13/viper"
@@ -16,10 +15,17 @@ type Loket struct {
 	Password     string
 	ApiKey       string
 	Token        string
-	Response     *http.Response
+	Response     LoketResponse
 	Body         string
-	Errors       []error
+	Error        error
 	TokenExpired bool
+}
+
+type LoketResponse struct {
+	Code    uint16      `json:"code"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Status  string      `json:"status"`
 }
 
 func getConfig(key string) string {
@@ -91,7 +97,7 @@ func (l *Loket) SetToken() *Loket {
 func (l *Loket) SetStruct(v interface{}) *Loket {
 	err := json.Unmarshal([]byte(l.Body), &v)
 	if err != nil {
-		l.Errors = append(l.Errors, err)
+		l.Error = err
 		return l
 	}
 	return l
@@ -99,20 +105,39 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 
 
 func (l *Loket) Post(url, t, body string) *Loket {
-	l.Response, l.Body, l.Errors = gr.New().
+	var errs []error
+	_, l.Body, errs = gr.New().
 		Post(SetUrl(url)).
 		Set("token", l.Token).
 		Type(t).
 		Send(body).
 		End()
+
+	for _, err := range errs {
+		l.Error = err
+	}
+
+	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+		l.Error = err
+	}
+
 	return l
 }
 
 func (l *Loket) Get(url string) *Loket {
-	l.Response, l.Body, l.Errors = gr.New().
+	var errs []error
+	_, l.Body, errs = gr.New().
 		Set("token", l.Token).
 		Get(SetUrl(url)).
 		Set("token", l.Token).
 		End()
+
+	for _, err := range errs {
+		l.Error = err
+	}
+
+	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+		l.Error = err
+	}
 	return l
 }

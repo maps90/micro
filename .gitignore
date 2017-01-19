@@ -1,9 +1,3 @@
-# from api-seller
-loket-api
-config.yaml
-vendor/
-*.swp
-
 # IntelliJ project files
 .idea
 *.iml
@@ -32,9 +26,10 @@ _cgo_export.*
 
 _testmain.go
 
+*.swp
 *.exe
 *.test
 *.prof
-micro-api
+micro
 build/micro
 app.yaml

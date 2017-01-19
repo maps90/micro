@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -37,11 +36,7 @@ func GetEventList(c echo.Context) error {
 	}
 
 	loket.GetAuth().Post("/v3/event", "form", "")
-	var m map[string]interface{}
-	json.Unmarshal([]byte(loket.Body), &m)
-
-	return helper.BuildJSON(c, m)
-
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
 
 func SearchEvent(c echo.Context) error {
@@ -56,13 +51,11 @@ func SearchEvent(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	search_json, _ := json.Marshal(s)
-	fmt.Println(string(search_json))
+	search_json, err := json.Marshal(s)
+	if err != nil {
+		loket.Error = err
+	}
 
 	loket.GetAuth().Post("/v3/event_search", "json", string(search_json))
-	var m map[string]interface{}
-	json.Unmarshal([]byte(loket.Body), &m)
-
-	return helper.BuildJSON(c, m)
-
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

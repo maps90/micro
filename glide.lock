@@ -1,6 +1,10 @@
-hash: 9260c8d56d22ea70c52930e6fb7ca0726093f270549386dd93f1b2eca1876473
-updated: 2017-01-19T15:07:03.475536947+07:00
+hash: 971f9a5a937352663e4ad8add37f9b402bbaa62021804d07fd47be579c2272a7
+updated: 2017-01-19T23:22:10.957579913+07:00
 imports:
+- name: github.com/bradfitz/gomemcache
+  version: 2fafb84a66c4911e11a8f50955b01e74fe3ab9c5
+  subpackages:
+  - memcache
 - name: github.com/BurntSushi/toml
   version: a4eecd407cf4129fc902ece859a0114e4cf1a7f4
 - name: github.com/dgrijalva/jwt-go
@@ -27,6 +31,10 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/jmoiron/sqlx
+  version: cac998c4f0959c19c638c523e374fa8e4e0bcfe3
+  subpackages:
+  - reflectx
 - name: github.com/kr/pretty
   version: e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb
 - name: github.com/kr/text
@@ -49,6 +57,7 @@ imports:
 - name: github.com/maps90/librarian
   version: c0d5de819af873294f2ab5e08880daacc58caaa5
   subpackages:
+  - cache
   - datasource
 - name: github.com/mattn/go-colorable
   version: 9cbef7c35391cca05f15f8181dc0b18bc9736dbb
@@ -89,6 +98,20 @@ imports:
   - unix
 - name: gopkg.in/fsnotify.v1
   version: 8611c35ab31c1c28aa903d33cf8b6e44a399b09e
+- name: gopkg.in/mgo.v2
+  version: d90005c5262a3463800497ea5a89aed5fe22c886
+  subpackages:
+  - bson
+  - internal/sasl
+  - internal/scram
+- name: gopkg.in/redis.v5
+  version: 8829ddcd8bdb333e477cc845946c4b9b2ef66280
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+  - internal/proto
 - name: gopkg.in/yaml.v2
   version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
 testImports:
