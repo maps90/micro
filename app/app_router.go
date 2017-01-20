@@ -21,8 +21,9 @@ func initRouter() error {
 	e.Get("/event/search", handler.SearchEvent)
 	e.Get("/schedule/:schedule_id", handler.GetScheduleById)
 	e.Get("/tickets/:schedule_id", handler.GetTicketsBySchedule)
-	e.Post("/invoice/paid/:code", handler.PostInvoiceStatus)
+	e.Post("/invoice/paid/:code", handler.PostInvoicePaid)
 	e.Post("/invoice/create", handler.CreateInvoice)
+	e.Get("/invoice/:invoice_code", handler.GetInvoiceStatus)
 	e.Post("/invoice/list/:invoice_code/attendee", handler.FetchInvoiceListAttendee)
 
 	std := standard.New(":" + c.GetString("app.port"))
