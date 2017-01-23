@@ -10,8 +10,19 @@ import (
 	"github.com/mataharimall/micro/helper"
 )
 
-func PostInvoiceStatus(c echo.Context) error {
-	loket, ok := librarian.Get("api.loket").(*api.Loket)
+func GetInvoiceStatus(c echo.Context) error {
+	loket, ok := librarian.Get("loket").(*api.Loket)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	url := fmt.Sprintf(`/v3/invoice/%s`, c.Param("invoice_code"))
+	loket.GetAuth().Post(url, "form", "")
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
+}
+
+func PostInvoicePaid(c echo.Context) error {
+	loket, ok := librarian.Get("loket").(*api.Loket)
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 	}
