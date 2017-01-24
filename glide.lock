@@ -1,5 +1,5 @@
-hash: 971f9a5a937352663e4ad8add37f9b402bbaa62021804d07fd47be579c2272a7
-updated: 2017-01-24T10:31:09.772472809+07:00
+hash: 238e1a6ea05ba5e3761e904d22db7f2f785ea99c34711a388382316c8a0b9dd5
+updated: 2017-01-24T16:10:31.578393628+07:00
 imports:
 - name: github.com/bradfitz/gomemcache
   version: 2fafb84a66c4911e11a8f50955b01e74fe3ab9c5
@@ -57,7 +57,7 @@ imports:
 - name: github.com/magiconair/properties
   version: c81f9d71af8f8cba1466501d30326b99a4e56c19
 - name: github.com/maps90/librarian
-  version: e8cab5373f406ac1d8ebb0a7aaa10c7069bd58c2
+  version: f969e1e84e31753edeb043c327d6508ca3352fc9
   subpackages:
   - cache
   - datasource
