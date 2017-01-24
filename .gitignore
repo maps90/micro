@@ -33,3 +33,4 @@ _testmain.go
 micro
 build/micro
 app.yaml
+vendor
