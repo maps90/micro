@@ -26,6 +26,6 @@ func FetchInvoiceListAttendee(c echo.Context) error {
 
 	url := fmt.Sprintf("/v1/invoice/%s/attendee", c.Param("invoice_code"))
 
-	loket.GetAuth().Post(url, "form", "")
+	loket.Post(url, "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

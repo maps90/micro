@@ -60,6 +60,6 @@ func CreateInvoice(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	loket.GetAuth().Post("/v3/invoice/create", "json", string(jbyte))
+	loket.Post("/v3/invoice/create", "json", string(jbyte))
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

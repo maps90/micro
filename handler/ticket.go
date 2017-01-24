@@ -18,7 +18,7 @@ func GetTicketsBySchedule(c echo.Context) (err error) {
 	}
 
 	url := fmt.Sprintf(`/v3/tickets/%s`, c.Param("schedule_id"))
-	loket.GetAuth().Post(url, "form", "")
+	loket.Post(url, "form", "")
 
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

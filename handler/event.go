@@ -35,7 +35,7 @@ func GetEventList(c echo.Context) error {
 
 	}
 
-	loket.GetAuth().Post("/v3/event", "form", "")
+	loket.Post("/v3/event", "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
 
@@ -56,6 +56,6 @@ func SearchEvent(c echo.Context) error {
 		loket.Error = err
 	}
 
-	loket.GetAuth().Post("/v3/event_search", "json", string(search_json))
+	loket.Post("/v3/event_search", "json", string(search_json))
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

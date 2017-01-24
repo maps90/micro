@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	gr "github.com/parnurzeal/gorequest"
-	c "github.com/spf13/viper"
 )
 
 var conf map[string]string
+var baseUrl string
 
 type Loket struct {
+	BaseUrl      string
 	UserName     string
 	Password     string
 	ApiKey       string
@@ -35,29 +36,40 @@ func getConfig(key string) string {
 	return ""
 }
 
-func (l *Loket) GetAuth() *Loket {
-	if l.TokenExpired {
+func (l *Loket) getAuth() *Loket {
+	if !l.TokenExpired && len(l.Token) != 0 {
 		return l
 	}
 	if len(l.UserName) == 0 || len(l.Password) == 0 || len(l.ApiKey) == 0 {
 		return l
 	}
+	var errs []error
 	body := fmt.Sprintf(`{"username": "%s","password": "%s","APIKEY": "%s"}`, l.UserName, l.Password, l.ApiKey)
-	l.Post("/v3/login", "form", body)
+	_, l.Body, errs = gr.New().
+		Post(SetUrl("/v3/login")).
+		Type("form").
+		Send(body).
+		End()
+
+	for _, err := range errs {
+		l.Error = err
+	}
+
+	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+		l.Error = err
+	}
 	l.SetToken()
 	return l
 }
 
-func NewLoketApi(configName string) (*Loket, error) {
-	conf = c.GetStringMapString(configName)
-	if conf == nil {
-		return nil, fmt.Errorf("missing config")
-	}
+func NewLoketApi(url, username, password, key string) (*Loket, error) {
+	baseUrl = url
 	l := &Loket{
-		UserName: getConfig("username"),
-		Password: getConfig("password"),
-		ApiKey:   getConfig("key"),
-		Token:    "",
+		UserName:     username,
+		Password:     password,
+		ApiKey:       key,
+		Token:        "",
+		TokenExpired: true,
 	}
 	return l, nil
 }
@@ -72,7 +84,7 @@ func GetResources() map[string]string {
 }
 
 func SetUrl(url string) string {
-	t := fmt.Sprintf("%s%s", getConfig("url"), url)
+	t := fmt.Sprintf("%s%s", baseUrl, url)
 	return t
 }
 
@@ -91,6 +103,7 @@ func (l *Loket) SetToken() *Loket {
 	}
 
 	l.Token = resp.Data.Token
+	l.TokenExpired = false
 	return l
 }
 
@@ -102,7 +115,6 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 	}
 	return l
 }
-
 
 func (l *Loket) Post(url, t, body string) *Loket {
 	var errs []error
@@ -119,6 +131,10 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
+	}
+
+	if l.Response.Data == nil {
+		l.getAuth().Post(url, t, body)
 	}
 
 	return l
@@ -139,5 +155,10 @@ func (l *Loket) Get(url string) *Loket {
 	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
 	}
+
+	if l.Response.Data == nil {
+		l.getAuth().Get(url)
+	}
+
 	return l
 }

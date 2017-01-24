@@ -18,6 +18,6 @@ func GetScheduleById(c echo.Context) error {
 	}
 
 	url := fmt.Sprintf(`/v3/schedule/%s`, c.Param("schedule_id"))
-	loket.GetAuth().Post(url, "form", "")
+	loket.Post(url, "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

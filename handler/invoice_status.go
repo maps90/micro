@@ -17,7 +17,7 @@ func GetInvoiceStatus(c echo.Context) error {
 	}
 
 	url := fmt.Sprintf(`/v3/invoice/%s`, c.Param("invoice_code"))
-	loket.GetAuth().Post(url, "form", "")
+	loket.Post(url, "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
 
@@ -28,6 +28,6 @@ func PostInvoicePaid(c echo.Context) error {
 	}
 
 	url := fmt.Sprintf(`/v3/invoice/%s/paid`, c.Param("code"))
-	loket.GetAuth().Post(url, "form", "")
+	loket.Post(url, "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
