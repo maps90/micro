@@ -37,7 +37,7 @@ func getConfig(key string) string {
 }
 
 func (l *Loket) getAuth() *Loket {
-	if !l.TokenExpired && len(l.Token) != 0 {
+	if !l.TokenExpired {
 		return l
 	}
 	if len(l.UserName) == 0 || len(l.Password) == 0 || len(l.ApiKey) == 0 {
@@ -62,13 +62,13 @@ func (l *Loket) getAuth() *Loket {
 	return l
 }
 
-func NewLoketApi(url, username, password, key string) (*Loket, error) {
+func NewLoketApi(url, username, password, key, clientKey string) (*Loket, error) {
 	baseUrl = url
 	l := &Loket{
 		UserName:     username,
 		Password:     password,
 		ApiKey:       key,
-		Token:        "",
+		Token:        clientKey,
 		TokenExpired: true,
 	}
 	return l, nil
@@ -120,7 +120,7 @@ func (l *Loket) Post(url, t, body string) *Loket {
 	var errs []error
 	_, l.Body, errs = gr.New().
 		Post(SetUrl(url)).
-		Set("token", l.Token).
+		Set("clientKey", l.Token).
 		Type(t).
 		Send(body).
 		End()
@@ -133,17 +133,13 @@ func (l *Loket) Post(url, t, body string) *Loket {
 		l.Error = err
 	}
 
-	if l.Response.Data == nil {
-		l.getAuth().Post(url, t, body)
-	}
-
 	return l
 }
 
 func (l *Loket) Get(url string) *Loket {
 	var errs []error
 	_, l.Body, errs = gr.New().
-		Set("token", l.Token).
+		Set("clientKey", l.Token).
 		Get(SetUrl(url)).
 		Set("token", l.Token).
 		End()
@@ -154,10 +150,6 @@ func (l *Loket) Get(url string) *Loket {
 
 	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
-	}
-
-	if l.Response.Data == nil {
-		l.getAuth().Get(url)
 	}
 
 	return l

@@ -2,8 +2,8 @@ package app
 
 import (
 	"github.com/maps90/librarian"
-	d "github.com/maps90/librarian/datasource"
 	"github.com/maps90/librarian/cache"
+	d "github.com/maps90/librarian/datasource"
 	"github.com/mataharimall/micro/api"
 	c "github.com/spf13/viper"
 )
@@ -20,7 +20,7 @@ func Construct() (err error) {
 func InitApp() error {
 	librarian.Set("loket", func() (interface{}, error) {
 		l := c.GetStringMapString("loket")
-		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"])
+		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"], l["clientKey"])
 	})
 	librarian.Set("mysql.master", func() (interface{}, error) {
 		return d.NewDatasourceFactory("mysqlaccess", "", c.GetString("mysql.master"))
