@@ -1,5 +1,5 @@
 hash: 971f9a5a937352663e4ad8add37f9b402bbaa62021804d07fd47be579c2272a7
-updated: 2017-01-19T23:22:10.957579913+07:00
+updated: 2017-01-24T10:31:09.772472809+07:00
 imports:
 - name: github.com/bradfitz/gomemcache
   version: 2fafb84a66c4911e11a8f50955b01e74fe3ab9c5
@@ -20,6 +20,8 @@ imports:
   version: a3b1354551a26449fbe05f5d855937f6e7acbd71
 - name: github.com/facebookgo/stats
   version: 1b76add642e42c6ffba7211ad7b3939ce654526e
+- name: github.com/go-sql-driver/mysql
+  version: 8f6c67f0228a4a6a962008d6c3d1e694e4532e71
 - name: github.com/hashicorp/hcl
   version: 1c284ec98f4b398443cbabb0d9197f7f4cc0077c
   subpackages:
@@ -55,7 +57,7 @@ imports:
 - name: github.com/magiconair/properties
   version: c81f9d71af8f8cba1466501d30326b99a4e56c19
 - name: github.com/maps90/librarian
-  version: c0d5de819af873294f2ab5e08880daacc58caaa5
+  version: e8cab5373f406ac1d8ebb0a7aaa10c7069bd58c2
   subpackages:
   - cache
   - datasource
