@@ -35,7 +35,7 @@ func GetEventList(c echo.Context) error {
 
 	}
 
-	loket.Post("/v3/event", "form", "")
+	loket.CacheOn().Post("/v3/event", "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
 

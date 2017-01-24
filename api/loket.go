@@ -1,14 +1,21 @@
 package api
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/maps90/librarian"
+	"github.com/maps90/librarian/cache"
 	gr "github.com/parnurzeal/gorequest"
 )
 
 var conf map[string]string
 var baseUrl string
+
+const CACHE_DURATION = 5 * time.Minute
 
 type Loket struct {
 	BaseUrl      string
@@ -20,6 +27,7 @@ type Loket struct {
 	Body         string
 	Error        error
 	TokenExpired bool
+	OnCache      bool
 }
 
 type LoketResponse struct {
@@ -44,9 +52,17 @@ func (l *Loket) getAuth() *Loket {
 		return l
 	}
 	var errs []error
+
 	body := fmt.Sprintf(`{"username": "%s","password": "%s","APIKEY": "%s"}`, l.UserName, l.Password, l.ApiKey)
+
+	reqTokenURI := SetUrl("/v3/login")
+
+	if l.getCache(l.createKey(reqTokenURI, body)) {
+		return l
+	}
+
 	_, l.Body, errs = gr.New().
-		Post(SetUrl("/v3/login")).
+		Post(reqTokenURI).
 		Type("form").
 		Send(body).
 		End()
@@ -57,6 +73,13 @@ func (l *Loket) getAuth() *Loket {
 
 	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
+	} else {
+		isCacheOn := l.OnCache
+		l.setCache(l.createKey(reqTokenURI, body), l.Body)
+		if isCacheOn {
+			l.OnCache = true
+		}
+
 	}
 	l.SetToken()
 	return l
@@ -72,15 +95,6 @@ func NewLoketApi(url, username, password, key string) (*Loket, error) {
 		TokenExpired: true,
 	}
 	return l, nil
-}
-
-func GetResources() map[string]string {
-	r := map[string]string{
-		"get_event_list":         SetUrl("v3/event"),
-		"get_ticket_groups":      SetUrl("v3/schedule/:scheduleID"),
-		"get_ticket_by_schedule": SetUrl("v3/tickets/:scheduleID"),
-	}
-	return r
 }
 
 func SetUrl(url string) string {
@@ -118,23 +132,34 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 
 func (l *Loket) Post(url, t, body string) *Loket {
 	var errs []error
+	var err error
+
+	aURL := SetUrl(url)
+
+	if l.getCache(l.createKey(aURL, t, body)) {
+		return l
+	}
+
 	_, l.Body, errs = gr.New().
-		Post(SetUrl(url)).
+		Post(aURL).
 		Set("token", l.Token).
 		Type(t).
 		Send(body).
 		End()
 
-	for _, err := range errs {
+	for _, err = range errs {
 		l.Error = err
 	}
 
-	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
 	}
 
-	if l.Response.Data == nil {
+	if len(l.Response.Data.([]interface{})) == 0 {
 		l.getAuth().Post(url, t, body)
+	} else {
+		l.setCache(l.createKey(aURL, t, body), l.Body)
+
 	}
 
 	return l
@@ -142,23 +167,74 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 func (l *Loket) Get(url string) *Loket {
 	var errs []error
+	var err error
+
+	aURL := SetUrl(url)
+
+	if l.getCache(l.createKey(aURL)) {
+		return l
+	}
+
 	_, l.Body, errs = gr.New().
-		Set("token", l.Token).
-		Get(SetUrl(url)).
+		Get(aURL).
 		Set("token", l.Token).
 		End()
 
-	for _, err := range errs {
+	for _, err = range errs {
 		l.Error = err
 	}
 
-	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
 	}
 
-	if l.Response.Data == nil {
+	if len(l.Response.Data.([]interface{})) == 0 {
 		l.getAuth().Get(url)
+	} else {
+		l.setCache(l.createKey(aURL), l.Body)
 	}
 
+	return l
+}
+
+func (l *Loket) createKey(keys ...string) string {
+	for k, v := range keys {
+		keys[k] = strings.ToLower(v)
+	}
+	s := md5.Sum([]byte(strings.Join(keys, "")))
+	return fmt.Sprintf("%x", string(s[:]))
+}
+
+func (l *Loket) setCache(key, data string) {
+	if l.OnCache {
+		fmt.Println("Setting cache")
+		cache := librarian.Get("redis.master").(*cache.CRedis)
+
+		cache.Set(key, data, CACHE_DURATION)
+		l.OnCache = false
+	}
+}
+
+func (l *Loket) getCache(key string) bool {
+	if l.OnCache {
+		fmt.Println("Getting cache")
+		cache := librarian.Get("redis.slave").(*cache.CRedis)
+
+		c := cache.Get(key)
+
+		if c != "" {
+			l.OnCache = false
+			l.Body = c
+			if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+				l.Error = err
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func (l *Loket) CacheOn() *Loket {
+	l.OnCache = true
 	return l
 }
