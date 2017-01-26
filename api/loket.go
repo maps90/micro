@@ -28,6 +28,7 @@ type Loket struct {
 	Error        error
 	TokenExpired bool
 	OnCache      bool
+	CacheEnable  bool
 }
 
 type LoketResponse struct {
@@ -57,10 +58,6 @@ func (l *Loket) getAuth() *Loket {
 
 	reqTokenURI := SetUrl("/v3/login")
 
-	if l.getCache(l.createKey(reqTokenURI, body)) {
-		return l
-	}
-
 	_, l.Body, errs = gr.New().
 		Post(reqTokenURI).
 		Type("form").
@@ -73,19 +70,12 @@ func (l *Loket) getAuth() *Loket {
 
 	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
-	} else {
-		isCacheOn := l.OnCache
-		l.setCache(l.createKey(reqTokenURI, body), l.Body)
-		if isCacheOn {
-			l.OnCache = true
-		}
-
 	}
 	l.SetToken()
 	return l
 }
 
-func NewLoketApi(url, username, password, key string) (*Loket, error) {
+func NewLoketApi(url, username, password, key string, cacheEnabled bool) (*Loket, error) {
 	baseUrl = url
 	l := &Loket{
 		UserName:     username,
@@ -93,6 +83,7 @@ func NewLoketApi(url, username, password, key string) (*Loket, error) {
 		ApiKey:       key,
 		Token:        "",
 		TokenExpired: true,
+		CacheEnable:  cacheEnabled,
 	}
 	return l, nil
 }
@@ -155,7 +146,18 @@ func (l *Loket) Post(url, t, body string) *Loket {
 		l.Error = err
 	}
 
-	if len(l.Response.Data.([]interface{})) == 0 {
+	forceAuth := false
+
+	switch l.Response.Data.(type) {
+	case nil:
+		forceAuth = true
+	case []interface{}:
+		if len(l.Response.Data.([]interface{})) == 0 {
+			forceAuth = true
+		}
+	}
+
+	if forceAuth {
 		l.getAuth().Post(url, t, body)
 	} else {
 		l.setCache(l.createKey(aURL, t, body), l.Body)
@@ -188,7 +190,18 @@ func (l *Loket) Get(url string) *Loket {
 		l.Error = err
 	}
 
-	if len(l.Response.Data.([]interface{})) == 0 {
+	forceAuth := false
+
+	switch l.Response.Data.(type) {
+	case nil:
+		forceAuth = true
+	case []interface{}:
+		if len(l.Response.Data.([]interface{})) == 0 {
+			forceAuth = true
+		}
+	}
+
+	if forceAuth {
 		l.getAuth().Get(url)
 	} else {
 		l.setCache(l.createKey(aURL), l.Body)
@@ -206,8 +219,8 @@ func (l *Loket) createKey(keys ...string) string {
 }
 
 func (l *Loket) setCache(key, data string) {
-	if l.OnCache {
-		fmt.Println("Setting cache")
+	if l.CacheEnable && l.OnCache {
+		fmt.Println("Set Cache")
 		cache := librarian.Get("redis.master").(*cache.CRedis)
 
 		cache.Set(key, data, CACHE_DURATION)
@@ -216,18 +229,18 @@ func (l *Loket) setCache(key, data string) {
 }
 
 func (l *Loket) getCache(key string) bool {
-	if l.OnCache {
-		fmt.Println("Getting cache")
+	if l.CacheEnable && l.OnCache {
+		fmt.Println("Get Cache")
 		cache := librarian.Get("redis.slave").(*cache.CRedis)
 
 		c := cache.Get(key)
 
 		if c != "" {
-			l.OnCache = false
 			l.Body = c
 			if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 				l.Error = err
 			}
+			l.OnCache = false
 			return true
 		}
 	}
@@ -236,5 +249,8 @@ func (l *Loket) getCache(key string) bool {
 
 func (l *Loket) CacheOn() *Loket {
 	l.OnCache = true
+	if !l.CacheEnable {
+		l.OnCache = false
+	}
 	return l
 }
