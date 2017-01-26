@@ -7,16 +7,16 @@ import (
 	"github.com/labstack/echo"
 )
 
-func BuildJSON(c echo.Context, rs interface{}, err error) (error) {
+func BuildJSON(c echo.Context, rs interface{}, err error) error {
 	reqId := RandomString(20)
 	rsLen := rs == nil
 	val := reflect.ValueOf(rs)
 	if val.Kind() == reflect.Ptr && val.IsNil() || rsLen {
 		rs = make([]string, 0)
 	}
+
 	if err != nil {
-		c.Error(err)
-		return err
+		return echo.NewHTTPError(400, err.Error())
 	} else {
 
 		response := map[string]interface{}{

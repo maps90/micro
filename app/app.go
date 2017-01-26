@@ -1,8 +1,6 @@
 package app
 
 import (
-	"strconv"
-
 	"github.com/maps90/librarian"
 	"github.com/maps90/librarian/cache"
 	d "github.com/maps90/librarian/datasource"
@@ -22,8 +20,9 @@ func Construct() (err error) {
 func InitApp() error {
 	librarian.Set("loket", func() (interface{}, error) {
 		l := c.GetStringMapString("loket")
-		cacheEnabled, _ := strconv.ParseBool(l["cache"])
-		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"], cacheEnabled)
+		cacheConfig := c.GetStringMapString("loket.cache")
+
+		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"], l["clientKey"], cacheConfig)
 	})
 	librarian.Set("mysql.master", func() (interface{}, error) {
 		return d.NewDatasourceFactory("mysqlaccess", "", c.GetString("mysql.master"))

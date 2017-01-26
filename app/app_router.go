@@ -4,6 +4,7 @@ import (
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
+	"github.com/mataharimall/micro/auth"
 	"github.com/mataharimall/micro/handler"
 	"github.com/mataharimall/micro/middleware"
 	c "github.com/spf13/viper"
@@ -13,6 +14,7 @@ func initRouter() error {
 	e := echo.New()
 	e.SetDebug(c.GetBool("app.debug"))
 	e.Use(middleware.Logger())
+	e.Use(middleware.ApiUserAuth(auth.GetCustomAuth))
 
 	e.SetBinder(middleware.AppBinder{})
 	e.SetHTTPErrorHandler(middleware.AppHttpErrorHandler)

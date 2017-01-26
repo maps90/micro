@@ -56,6 +56,6 @@ func SearchEvent(c echo.Context) error {
 		loket.Error = err
 	}
 
-	loket.Post("/v3/event_search", "json", string(search_json))
+	loket.CacheOn().Post("/v3/event_search", "json", string(search_json))
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

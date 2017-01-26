@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,24 +16,23 @@ import (
 var conf map[string]string
 var baseUrl string
 
-const CACHE_DURATION = 5 * time.Minute
-
 type Loket struct {
-	BaseUrl      string
-	UserName     string
-	Password     string
-	ApiKey       string
-	Token        string
-	Response     LoketResponse
-	Body         string
-	Error        error
-	TokenExpired bool
-	OnCache      bool
-	CacheEnable  bool
+	BaseUrl       string
+	UserName      string
+	Password      string
+	ApiKey        string
+	Token         string
+	Response      LoketResponse
+	Body          string
+	Error         error
+	TokenExpired  bool
+	OnCache       bool
+	CacheEnable   bool
+	CacheDuration time.Duration
 }
 
 type LoketResponse struct {
-	Code    uint16      `json:"code"`
+	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
 	Status  string      `json:"status"`
@@ -46,7 +46,7 @@ func getConfig(key string) string {
 }
 
 func (l *Loket) getAuth() *Loket {
-	if !l.TokenExpired && len(l.Token) != 0 {
+	if !l.TokenExpired {
 		return l
 	}
 	if len(l.UserName) == 0 || len(l.Password) == 0 || len(l.ApiKey) == 0 {
@@ -75,15 +75,20 @@ func (l *Loket) getAuth() *Loket {
 	return l
 }
 
-func NewLoketApi(url, username, password, key string, cacheEnabled bool) (*Loket, error) {
+func NewLoketApi(url, username, password, key, clientKey string, cacheConfig map[string]string) (*Loket, error) {
 	baseUrl = url
+
+	cache_enable, _ := strconv.ParseBool(cacheConfig["enable"])
+	cache_duration, _ := strconv.Atoi(cacheConfig["duration"])
+
 	l := &Loket{
-		UserName:     username,
-		Password:     password,
-		ApiKey:       key,
-		Token:        "",
-		TokenExpired: true,
-		CacheEnable:  cacheEnabled,
+		UserName:      username,
+		Password:      password,
+		ApiKey:        key,
+		Token:         clientKey,
+		TokenExpired:  true,
+		CacheEnable:   cache_enable, //Will overide CacheOn() method if false
+		CacheDuration: time.Duration(cache_duration) * time.Minute,
 	}
 	return l, nil
 }
@@ -127,13 +132,15 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 	aURL := SetUrl(url)
 
+	l.Error = nil
+
 	if l.getCache(l.createKey(aURL, t, body)) {
 		return l
 	}
 
 	_, l.Body, errs = gr.New().
 		Post(aURL).
-		Set("token", l.Token).
+		Set("clientKey", l.Token).
 		Type(t).
 		Send(body).
 		End()
@@ -144,24 +151,12 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
-	}
-
-	forceAuth := false
-
-	switch l.Response.Data.(type) {
-	case nil:
-		forceAuth = true
-	case []interface{}:
-		if len(l.Response.Data.([]interface{})) == 0 {
-			forceAuth = true
-		}
-	}
-
-	if forceAuth {
-		l.getAuth().Post(url, t, body)
 	} else {
-		l.setCache(l.createKey(aURL, t, body), l.Body)
-
+		if l.Response.Code != 200 {
+			l.Error = fmt.Errorf("[%d] %s", l.Response.Code, l.Response.Message)
+		} else {
+			l.setCache(l.createKey(aURL, t, body), l.Body)
+		}
 	}
 
 	return l
@@ -173,13 +168,15 @@ func (l *Loket) Get(url string) *Loket {
 
 	aURL := SetUrl(url)
 
+	l.Error = nil
+
 	if l.getCache(l.createKey(aURL)) {
 		return l
 	}
 
 	_, l.Body, errs = gr.New().
 		Get(aURL).
-		Set("token", l.Token).
+		Set("clientKey", l.Token).
 		End()
 
 	for _, err = range errs {
@@ -188,23 +185,12 @@ func (l *Loket) Get(url string) *Loket {
 
 	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
-	}
-
-	forceAuth := false
-
-	switch l.Response.Data.(type) {
-	case nil:
-		forceAuth = true
-	case []interface{}:
-		if len(l.Response.Data.([]interface{})) == 0 {
-			forceAuth = true
-		}
-	}
-
-	if forceAuth {
-		l.getAuth().Get(url)
 	} else {
-		l.setCache(l.createKey(aURL), l.Body)
+		if l.Response.Code != 200 {
+			l.Error = fmt.Errorf("[%d] %s", l.Response.Code, l.Response.Message)
+		} else {
+			l.setCache(l.createKey(aURL), l.Body)
+		}
 	}
 
 	return l
@@ -223,7 +209,7 @@ func (l *Loket) setCache(key, data string) {
 		fmt.Println("Set Cache")
 		cache := librarian.Get("redis.master").(*cache.CRedis)
 
-		cache.Set(key, data, CACHE_DURATION)
+		cache.Set(key, data, l.CacheDuration)
 		l.OnCache = false
 	}
 }

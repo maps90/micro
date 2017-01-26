@@ -1,40 +1,26 @@
 package middleware
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"strings"
 	"github.com/labstack/echo"
-	config "github.com/spf13/viper"
 	"net/http"
 )
 
-const Bearer = "Bearer"
+type ApiUserAuthFunc func(bearer, token string) (bool, error)
 
-func Auth() echo.MiddlewareFunc {
+func ApiUserAuth(getAuth ApiUserAuthFunc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			auth := c.Request().Header().Get("Authorization")
-			l := len(Bearer)
+			requestAuth := c.Request().Header().Get("Authorization")
+			a := strings.Split(requestAuth, " ")
 			he := echo.NewHTTPError(http.StatusUnauthorized)
-
-			if len(auth) > l+1 && auth[:l] == Bearer {
-				t, err := jwt.Parse(auth[l+1:], func(token *jwt.Token) (interface{}, error) {
-
-					// Always check the signing method
-					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-						return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-					}
-
-					// Return the key for validation
-					return []byte(config.GetString("jwt_signature")), nil
-				})
-				if err == nil && t.Valid {
-					// Store token claims in echo.Context
-					c.Set("claims", t.Claims)
-					return nil
-				}
+			if len(a) != 2 {
+				return he
 			}
-			return he
+			if ok, _ := getAuth(a[0], a[1]); !ok {
+				return he
+			}
+			return next(c)
 		}
 	}
 }
