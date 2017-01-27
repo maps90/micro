@@ -20,7 +20,9 @@ func Construct() (err error) {
 func InitApp() error {
 	librarian.Set("loket", func() (interface{}, error) {
 		l := c.GetStringMapString("loket")
-		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"], l["clientKey"])
+		cacheConfig := c.GetStringMapString("loket.cache")
+
+		return api.NewLoketApi(l["url"], l["username"], l["password"], l["key"], l["clientKey"], cacheConfig)
 	})
 	librarian.Set("mysql.master", func() (interface{}, error) {
 		return d.NewDatasourceFactory("mysqlaccess", "", c.GetString("mysql.master"))

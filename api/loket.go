@@ -1,9 +1,15 @@
 package api
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
+	"github.com/maps90/librarian"
+	"github.com/maps90/librarian/cache"
 	gr "github.com/parnurzeal/gorequest"
 )
 
@@ -11,19 +17,22 @@ var conf map[string]string
 var baseUrl string
 
 type Loket struct {
-	BaseUrl      string
-	UserName     string
-	Password     string
-	ApiKey       string
-	Token        string
-	Response     LoketResponse
-	Body         string
-	Error        error
-	TokenExpired bool
+	BaseUrl       string
+	UserName      string
+	Password      string
+	ApiKey        string
+	Token         string
+	Response      LoketResponse
+	Body          string
+	Error         error
+	TokenExpired  bool
+	OnCache       bool
+	CacheEnable   bool
+	CacheDuration time.Duration
 }
 
 type LoketResponse struct {
-	Code    uint16      `json:"code"`
+	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
 	Status  string      `json:"status"`
@@ -44,9 +53,13 @@ func (l *Loket) getAuth() *Loket {
 		return l
 	}
 	var errs []error
+
 	body := fmt.Sprintf(`{"username": "%s","password": "%s","APIKEY": "%s"}`, l.UserName, l.Password, l.ApiKey)
+
+	reqTokenURI := SetUrl("/v3/login")
+
 	_, l.Body, errs = gr.New().
-		Post(SetUrl("/v3/login")).
+		Post(reqTokenURI).
 		Type("form").
 		Send(body).
 		End()
@@ -62,25 +75,22 @@ func (l *Loket) getAuth() *Loket {
 	return l
 }
 
-func NewLoketApi(url, username, password, key, clientKey string) (*Loket, error) {
+func NewLoketApi(url, username, password, key, clientKey string, cacheConfig map[string]string) (*Loket, error) {
 	baseUrl = url
+
+	cache_enable, _ := strconv.ParseBool(cacheConfig["enable"])
+	cache_duration, _ := strconv.Atoi(cacheConfig["duration"])
+
 	l := &Loket{
-		UserName:     username,
-		Password:     password,
-		ApiKey:       key,
-		Token:        clientKey,
-		TokenExpired: true,
+		UserName:      username,
+		Password:      password,
+		ApiKey:        key,
+		Token:         clientKey,
+		TokenExpired:  true,
+		CacheEnable:   cache_enable, //Will overide CacheOn() method if false
+		CacheDuration: time.Duration(cache_duration) * time.Minute,
 	}
 	return l, nil
-}
-
-func GetResources() map[string]string {
-	r := map[string]string{
-		"get_event_list":         SetUrl("v3/event"),
-		"get_ticket_groups":      SetUrl("v3/schedule/:scheduleID"),
-		"get_ticket_by_schedule": SetUrl("v3/tickets/:scheduleID"),
-	}
-	return r
 }
 
 func SetUrl(url string) string {
@@ -118,19 +128,35 @@ func (l *Loket) SetStruct(v interface{}) *Loket {
 
 func (l *Loket) Post(url, t, body string) *Loket {
 	var errs []error
+	var err error
+
+	aURL := SetUrl(url)
+
+	l.Error = nil
+
+	if l.getCache(l.createKey(aURL, t, body)) {
+		return l
+	}
+
 	_, l.Body, errs = gr.New().
-		Post(SetUrl(url)).
+		Post(aURL).
 		Set("clientKey", l.Token).
 		Type(t).
 		Send(body).
 		End()
 
-	for _, err := range errs {
+	for _, err = range errs {
 		l.Error = err
 	}
 
-	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
+	} else {
+		if l.Response.Code != 200 {
+			l.Error = fmt.Errorf("[%d] %s", l.Response.Code, l.Response.Message)
+		} else {
+			l.setCache(l.createKey(aURL, t, body), l.Body)
+		}
 	}
 
 	return l
@@ -138,19 +164,79 @@ func (l *Loket) Post(url, t, body string) *Loket {
 
 func (l *Loket) Get(url string) *Loket {
 	var errs []error
+	var err error
+
+	aURL := SetUrl(url)
+
+	l.Error = nil
+
+	if l.getCache(l.createKey(aURL)) {
+		return l
+	}
+
 	_, l.Body, errs = gr.New().
+		Get(aURL).
 		Set("clientKey", l.Token).
-		Get(SetUrl(url)).
-		Set("token", l.Token).
 		End()
 
-	for _, err := range errs {
+	for _, err = range errs {
 		l.Error = err
 	}
 
-	if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+	if err = json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
 		l.Error = err
+	} else {
+		if l.Response.Code != 200 {
+			l.Error = fmt.Errorf("[%d] %s", l.Response.Code, l.Response.Message)
+		} else {
+			l.setCache(l.createKey(aURL), l.Body)
+		}
 	}
 
+	return l
+}
+
+func (l *Loket) createKey(keys ...string) string {
+	for k, v := range keys {
+		keys[k] = strings.ToLower(v)
+	}
+	s := md5.Sum([]byte(strings.Join(keys, "")))
+	return fmt.Sprintf("%x", string(s[:]))
+}
+
+func (l *Loket) setCache(key, data string) {
+	if l.CacheEnable && l.OnCache {
+		fmt.Println("Set Cache")
+		cache := librarian.Get("redis.master").(*cache.CRedis)
+
+		cache.Set(key, data, l.CacheDuration)
+		l.OnCache = false
+	}
+}
+
+func (l *Loket) getCache(key string) bool {
+	if l.CacheEnable && l.OnCache {
+		fmt.Println("Get Cache")
+		cache := librarian.Get("redis.slave").(*cache.CRedis)
+
+		c := cache.Get(key)
+
+		if c != "" {
+			l.Body = c
+			if err := json.Unmarshal([]byte(l.Body), &l.Response); err != nil {
+				l.Error = err
+			}
+			l.OnCache = false
+			return true
+		}
+	}
+	return false
+}
+
+func (l *Loket) CacheOn() *Loket {
+	l.OnCache = true
+	if !l.CacheEnable {
+		l.OnCache = false
+	}
 	return l
 }

@@ -4,9 +4,9 @@ import (
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
+	"github.com/mataharimall/micro/auth"
 	"github.com/mataharimall/micro/handler"
 	"github.com/mataharimall/micro/middleware"
-	"github.com/mataharimall/micro/auth"
 	c "github.com/spf13/viper"
 )
 
