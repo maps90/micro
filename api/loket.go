@@ -201,7 +201,7 @@ func (l *Loket) createKey(keys ...string) string {
 		keys[k] = strings.ToLower(v)
 	}
 	s := md5.Sum([]byte(strings.Join(keys, "")))
-	return fmt.Sprintf("%x", string(s[:]))
+	return fmt.Sprintf("loketapi:%x", string(s[:]))
 }
 
 func (l *Loket) setCache(key, data string) {

@@ -20,6 +20,7 @@ func initRouter() error {
 	e.SetHTTPErrorHandler(middleware.AppHttpErrorHandler)
 
 	e.Get("/event", handler.GetEventList)
+	e.Get("/event/:event_id", handler.GetEventDetail)
 	e.Get("/event/search", handler.SearchEvent)
 	e.Get("/schedule/:schedule_id", handler.GetScheduleById)
 	e.Get("/tickets/:schedule_id", handler.GetTicketsBySchedule)
