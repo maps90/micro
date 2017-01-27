@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -36,6 +37,18 @@ func GetEventList(c echo.Context) error {
 	}
 
 	loket.CacheOn().Post("/v3/event", "form", "")
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
+}
+
+func GetEventDetail(c echo.Context) error {
+	loket, ok := librarian.Get("loket").(*api.Loket)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
+
+	}
+
+	url := fmt.Sprintf(`/v3/event/%s`, c.Param("event_id"))
+	loket.CacheOn().Post(url, "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }
 
