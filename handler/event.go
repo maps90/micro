@@ -24,9 +24,9 @@ type SearchEventPayload struct {
 			MinStartDate string `json:"min_start_date" query:"min_start_date"`
 			MaxEndDate   string `json:"max_end_date" query:"max_end_date"`
 		} `json:"search"`
+		Limit  string `json:"limit" query:"limit"`
+		Offset string `json:"offset" query:"offset"`
 	} `json:"data"`
-	Limit  string `json:"limit"`
-	Offset string `json:"offset"`
 }
 
 func GetEventList(c echo.Context) error {
@@ -63,7 +63,6 @@ func SearchEvent(c echo.Context) error {
 	if err := c.Bind(&s); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
 	search_json, err := json.Marshal(s)
 	if err != nil {
 		loket.Error = err
