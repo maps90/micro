@@ -22,6 +22,7 @@ func initRouter() error {
 	e.Get("/event", handler.GetEventList)
 	e.Get("/event/:event_id", handler.GetEventDetail)
 	e.Get("/event/search", handler.SearchEvent)
+	e.Get("/event/cities", handler.GetEventCities)
 	e.Get("/schedule/:schedule_id", handler.GetScheduleById)
 	e.Get("/tickets/:schedule_id", handler.GetTicketsBySchedule)
 	e.Post("/invoice/paid/:code", handler.PostInvoicePaid)

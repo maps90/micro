@@ -21,8 +21,11 @@ type SearchEventPayload struct {
 		Search struct {
 			EventName    string `json:"event_name" query:"event_name"`
 			LocationName string `json:"location_name" query:"location_name"`
+			City         string `json:"city" query:"city"`
 			MinStartDate string `json:"min_start_date" query:"min_start_date"`
 			MaxEndDate   string `json:"max_end_date" query:"max_end_date"`
+			MinPrice     string `json:"min_price" query:"min_price"`
+			MaxPrice     string `json:"max_price" query:"max_price"`
 		} `json:"search"`
 		Limit  string `json:"limit" query:"limit"`
 		Offset string `json:"offset" query:"offset"`
@@ -69,5 +72,15 @@ func SearchEvent(c echo.Context) error {
 	}
 
 	loket.CacheOn().Post("/v3/event_search", "json", string(search_json))
+	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
+}
+
+func GetEventCities(c echo.Context) error {
+	loket, ok := librarian.Get("loket").(*api.Loket)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	loket.CacheOn().Post("/v3/event_list/cities", "form", "")
 	return helper.BuildJSON(c, loket.Response.Data, loket.Error)
 }

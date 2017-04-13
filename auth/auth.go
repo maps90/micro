@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+
 	"github.com/maps90/librarian"
 	d "github.com/maps90/librarian/datasource"
 )
