@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"strings"
-	"github.com/labstack/echo"
 	"net/http"
+	"strings"
+
+	"github.com/labstack/echo"
 )
 
 type ApiUserAuthFunc func(bearer, token string) (bool, error)
